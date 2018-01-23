@@ -20,7 +20,8 @@ class COOPGAME_API ASCharacter : public ACharacter
 public:
 	// Sets default values for this character's properties
 	ASCharacter();
-
+	UPROPERTY(BlueprintReadOnly, Category = "Character")
+		bool bIsReloading;
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -73,6 +74,7 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly, Category = "Character")
 		bool bIsCrouching;
+
 	void StopFire();
 
 	void StartSprint();

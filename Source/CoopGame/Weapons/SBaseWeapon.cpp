@@ -14,6 +14,7 @@
 #include "TimerManager.h"
 #include "Net/UnrealNetwork.h"
 #include "Slate/SlateBrushAsset.h"
+#include "SCharacter.h"
 
 // Sets default values
 ASBaseWeapon::ASBaseWeapon()
@@ -168,25 +169,48 @@ void ASBaseWeapon::Reload()
 	if (Role < ROLE_Authority) {
 		ServerReload();
 	}
+	ASCharacter* Owner = Cast<ASCharacter>(GetOwner());
+	if (CurrentAmmo == AmmoPerMag || TotalAmmo == 0) {
+		if (Owner)
+			Owner->bIsReloading = false;
+		return;
+	}
+	else if (Owner) {
+		Owner->bIsReloading = true;
+		GetWorldTimerManager().SetTimer(UnusedHandle, this, &ASBaseWeapon::Reloading, ReloadTime, false);
+	}
+}
+
+void ASBaseWeapon::Reloading()
+{
 	if (CurrentAmmo == 0 && TotalAmmo >= AmmoPerMag) {
 		CurrentAmmo = AmmoPerMag;
 		TotalAmmo -= AmmoPerMag;
 		bOutOfAmmo = false;
+		GetWorldTimerManager().ClearTimer(UnusedHandle);
+
 	}
 	else if (CurrentAmmo == 0 && TotalAmmo > 0 && TotalAmmo < AmmoPerMag) {
 		CurrentAmmo = TotalAmmo;
 		TotalAmmo = 0;
 		bOutOfAmmo = false;
+		GetWorldTimerManager().ClearTimer(UnusedHandle);
 	}
-	else if (CurrentAmmo != AmmoPerMag){
+	else if (CurrentAmmo != AmmoPerMag) {
 		int32 DepletedAmmo = AmmoPerMag - CurrentAmmo;
 		CurrentAmmo = AmmoPerMag;
 		TotalAmmo -= DepletedAmmo;
 		bOutOfAmmo = false;
+		GetWorldTimerManager().ClearTimer(UnusedHandle);
 	}
-	else return;
+	else {
+		GetWorldTimerManager().ClearTimer(UnusedHandle);
+	}
+	ASCharacter* Owner = Cast<ASCharacter>(GetOwner());
+	if (Owner)
+		Owner->bIsReloading = false;
+	return;
 }
-
 
 void ASBaseWeapon::ServerReload_Implementation()
 {

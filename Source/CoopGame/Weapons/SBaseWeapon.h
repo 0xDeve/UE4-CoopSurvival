@@ -124,6 +124,9 @@ protected:
 	float TimeBetweenShots;
 	void PlayImpactEffect(EPhysicalSurface SurfaceType, FVector ImpactPoint);
 	void FireEffect(FVector TracerEndPoint);
+
+	FTimerHandle UnusedHandle;
+	void Reloading();
 private:
 
 	float LastFireTime;
