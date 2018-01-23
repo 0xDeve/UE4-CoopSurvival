@@ -7,7 +7,7 @@
 #include "STrackerBot.generated.h"
 
 class UStaticMeshComponent;
-
+class USHealthComponent;
 UCLASS()
 class COOPGAME_API ASTrackerBot : public APawn
 {
@@ -22,8 +22,23 @@ protected:
 	virtual void BeginPlay() override;
 	UPROPERTY(VisibleDefaultsOnly, Category="Components")
 	UStaticMeshComponent* MeshComp;
+	UFUNCTION()
+	void HandleTakeDamage(USHealthComponent* OwningHealthComp, float Health, float HealthData, const class UDamageType* DamageType,
+		class AController* InstigatedBy, AActor* DamageCauser);
+	// Dynamic material to pulse on damage
+	UMaterialInstanceDynamic* MatInst;
 
 	FVector GetNextPathPoint();
+	// Next point in navigation path
+	FVector NextPathPoint;
+	UPROPERTY(EditDefaultsOnly, Category = "Trackerbot")
+	float MovementForce;
+	UPROPERTY(EditDefaultsOnly, Category = "Trackerbot")
+	bool bUseVelocityChange;
+	UPROPERTY(EditDefaultsOnly, Category = "Trackerbot")
+	float RequiredDistanceToTarget;
+	
+	USHealthComponent* HealthComp;
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
