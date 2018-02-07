@@ -47,6 +47,9 @@ public:
 	// Clear timer for fire function
 	void StopFire();
 	void Reload();
+
+	UFUNCTION(BlueprintCallable, Category="Ammunition")
+	void RefillAmmo();
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -95,8 +98,10 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
 		float Weight;
 	// Weapon attributes
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Ammunition")
+	UPROPERTY(BlueprintReadOnly, Category = "Ammunition")
 		int32 TotalAmmo;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Ammunition")
+		int32 MaxAmmo;
 	UPROPERTY(EditDefaultsOnly, Category = "Ammunition")
 		int32 AmmoPerMag;
 	UPROPERTY(EditDefaultsOnly, Category = "Ammunition")

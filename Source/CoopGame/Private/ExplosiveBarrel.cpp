@@ -7,6 +7,7 @@
 #include "Components/StaticMeshComponent.h"
 #include "PhysicsEngine/RadialForceComponent.h"
 #include "Net/UnrealNetwork.h"
+#include "Sound/SoundCue.h"
 // Sets default values
 AExplosiveBarrel::AExplosiveBarrel()
 {
@@ -56,6 +57,8 @@ void AExplosiveBarrel::OnRep_Exploded()
 {
 	UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), Explosion, GetActorLocation(), GetActorRotation());
 	BarrelComp->SetMaterial(0,ExplodedMaterial);
+	if (ExplosionSound)
+		UGameplayStatics::PlaySoundAtLocation(this, ExplosionSound, GetActorLocation());
 }
 
 // Called every frame

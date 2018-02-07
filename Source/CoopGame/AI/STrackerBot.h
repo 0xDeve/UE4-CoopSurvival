@@ -61,6 +61,8 @@ protected:
 	void DamageSelf();
 	float SelfDamageInterval;
 	bool bStartedSelfDestruction;
+	int32 PowerLevel;
+	void DetectBot();
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;

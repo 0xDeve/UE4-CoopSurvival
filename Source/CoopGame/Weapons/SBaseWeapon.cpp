@@ -42,6 +42,7 @@ void ASBaseWeapon::BeginPlay()
 	Super::BeginPlay();
 	TimeBetweenShots = 60 / RateOfFire;
 	CurrentAmmo = AmmoPerMag;
+	TotalAmmo = MaxAmmo;
 }
 
 void ASBaseWeapon::Fire()
@@ -64,15 +65,17 @@ void ASBaseWeapon::Fire()
 			FRotator EyeRotation; // Camera rotation
 			MyPawn->GetActorEyesViewPoint(EyeLocation, EyeRotation); // Return value for camera's transform
 			APlayerController* PC = Cast<APlayerController>(MyPawn->GetInstigatorController()); // Player controller
-			if (PC)
+			if (PC) {
 				PC->ClientPlayCameraShake(CamShake);
+				// Apply recoil to weapon
+				PC->AddPitchInput(RecoilY);
+				PC->AddYawInput(RecoilX);
+			}
+				
 			FVector ShotDirection = EyeRotation.Vector();
 			FVector TraceEnd = EyeLocation + (ShotDirection * BulletMaxDistance); // End location of bullet
 
-																				  // Apply recoil to weapon
-			PC->AddPitchInput(RecoilY);
-			PC->AddYawInput(RecoilX);
-
+																				  
 			FCollisionQueryParams QueryParam;
 			QueryParam.AddIgnoredActor(MyPawn);
 			QueryParam.AddIgnoredActor(this);
@@ -179,6 +182,12 @@ void ASBaseWeapon::Reload()
 		Owner->bIsReloading = true;
 		GetWorldTimerManager().SetTimer(UnusedHandle, this, &ASBaseWeapon::Reloading, ReloadTime, false);
 	}
+}
+
+void ASBaseWeapon::RefillAmmo()
+{
+	CurrentAmmo = AmmoPerMag;
+	TotalAmmo = MaxAmmo;
 }
 
 void ASBaseWeapon::Reloading()

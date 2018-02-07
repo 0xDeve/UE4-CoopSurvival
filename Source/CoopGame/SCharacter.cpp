@@ -11,6 +11,7 @@
 #include "Components/SHealthComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "Weapons/SBaseWeapon.h"
+#include "SGameInstance.h"
 // Sets default values
 ASCharacter::ASCharacter()
 {
@@ -24,7 +25,6 @@ ASCharacter::ASCharacter()
 	ZoomFOV = 50.f;
 	ZoomInterpSpeed = 20.0f;
 	GetCapsuleComponent()->SetCollisionResponseToChannel(COLLISION_WEAPON, ECR_Ignore);
-
 	HealthComp = CreateDefaultSubobject<USHealthComponent>(TEXT("Health component"));
 	HealthComp->OnHealthChanged.AddDynamic(this, &ASCharacter::OnHealthChanged);
 }
@@ -33,6 +33,8 @@ ASCharacter::ASCharacter()
 void ASCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+	USGameInstance* GI = Cast<USGameInstance>(GetWorld()->GetGameInstance());
+	MainWeaponClass = GI->SelectedWeapons.FindOrAdd(0);
 	GetMovementComponent()->GetNavAgentPropertiesRef().bCanCrouch = true;
 	DefaultFOV = ThirdPersonCamera->FieldOfView;
 	if (Role == ROLE_Authority) {
@@ -127,7 +129,7 @@ void ASCharacter::OnHealthChanged(USHealthComponent* OwningHealthComp, float Hea
 
 		DetachFromControllerPendingDestroy();
 
-		SetLifeSpan(10.f);
+		SetLifeSpan(4.f);
 	}
 }
 
@@ -143,6 +145,7 @@ void ASCharacter::Tick(float DeltaTime)
 	float TargetFOV = bWantsToZoom ? CurrentWeapon->ZoomFOV : DefaultFOV;
 	float CurrentFOV = FMath::FInterpTo(ThirdPersonCamera->FieldOfView, TargetFOV, DeltaTime, ZoomInterpSpeed);
 	ThirdPersonCamera->SetFieldOfView(CurrentFOV);
+	
 }
 
 // Called to bind functionality to input

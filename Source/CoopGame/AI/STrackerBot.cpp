@@ -24,7 +24,7 @@ ASTrackerBot::ASTrackerBot()
 	HealthComp->OnHealthChanged.AddDynamic(this, &ASTrackerBot::HandleTakeDamage);
 	SphereComp = CreateDefaultSubobject<USphereComponent>(TEXT("Sphere comp"));
 	SphereComp->SetSphereRadius(200);
-	SphereComp->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	SphereComp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	SphereComp->SetCollisionResponseToAllChannels(ECR_Ignore);
 	SphereComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
 	SphereComp->SetupAttachment(RootComponent);
@@ -41,8 +41,11 @@ void ASTrackerBot::BeginPlay()
 {
 	Super::BeginPlay();
 	// Find initial path point
-	if (Role == ROLE_Authority)
+	if (Role == ROLE_Authority) {
 		NextPathPoint = GetNextPathPoint();
+		FTimerHandle TimerHandle_DetectBot;
+		GetWorldTimerManager().SetTimer(TimerHandle_DetectBot, this, &ASTrackerBot::DetectBot, 1.0f, true);
+	}
 }
 
 void ASTrackerBot::HandleTakeDamage(USHealthComponent* OwningHealthComp, float Health, float HealthData, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser)
@@ -61,8 +64,10 @@ FVector ASTrackerBot::GetNextPathPoint()
 {
 	auto PlayerPawn = UGameplayStatics::GetPlayerCharacter(this, 0);
 	UNavigationPath* NavPath = UNavigationSystem::FindPathToActorSynchronously(this, GetActorLocation(), PlayerPawn);
-	if (NavPath->PathPoints.Num() > 1)
-		return NavPath->PathPoints[1];
+	if (NavPath) {
+		if (NavPath->PathPoints.Num() > 1)
+			return NavPath->PathPoints[1];
+	}
 	return GetActorLocation();
 }
 
@@ -72,6 +77,7 @@ void ASTrackerBot::SelfDestruct()
 		return;
 	}
 	bExploded = true;
+	UE_LOG(LogTemp, Warning, TEXT("Exploded"));
 	UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionEffect, GetActorLocation());
 	UGameplayStatics::PlaySoundAtLocation(this, ExplodeSound, GetActorLocation());
 	MeshComp->SetVisibility(false, true);
@@ -79,7 +85,8 @@ void ASTrackerBot::SelfDestruct()
 	if (Role == ROLE_Authority) {
 		TArray<AActor*> IgnoredActors;
 		IgnoredActors.Add(this);
-		UGameplayStatics::ApplyRadialDamage(this, ExplosionDamage, GetActorLocation(), ExplosionRadius, nullptr, IgnoredActors, this, GetInstigatorController(), true);
+		float ActualDamage = ExplosionDamage + (ExplosionDamage * PowerLevel);
+		UGameplayStatics::ApplyRadialDamage(this, ActualDamage, GetActorLocation(), ExplosionRadius, nullptr, IgnoredActors, this, GetInstigatorController(), true);
 		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionEffect, GetActorLocation());
 		// Delete actor
 		SetLifeSpan(2.0f);
@@ -120,11 +127,47 @@ void ASTrackerBot::NotifyActorBeginOverlap(AActor* OtherActor)
 			if (Role == ROLE_Authority) {
 				// Start self destruction sequence
 				GetWorldTimerManager().SetTimer(TimerHandle_SelfDamage, this, &ASTrackerBot::DamageSelf, SelfDamageInterval, true, 0.0f);
+				UE_LOG(LogTemp, Warning, TEXT("Exploded"));
 			}
 			UGameplayStatics::SpawnSoundAttached(SelfDestructSound, RootComponent);
 			bStartedSelfDestruction = true;
 		}
 	}
 
+}
+
+void ASTrackerBot::DetectBot()
+{
+	const float Radius = 600.f;
+	FCollisionShape TempCollisionComp;
+	TempCollisionComp.SetSphere(Radius);
+	
+	FCollisionObjectQueryParams QueryParams;
+	QueryParams.AddObjectTypesToQuery(ECC_PhysicsBody);
+	QueryParams.AddObjectTypesToQuery(ECC_Pawn);
+
+	TArray<FOverlapResult> Overlaps;
+	GetWorld()->OverlapMultiByObjectType(Overlaps, GetActorLocation(), FQuat::Identity, QueryParams, TempCollisionComp);
+
+
+	int32 NrOfBots = 0;
+	for (FOverlapResult Result : Overlaps) {
+		ASTrackerBot* Bot = Cast<ASTrackerBot>(Result.GetActor());
+		if (Bot && Bot != this)
+			NrOfBots++;
+	}
+
+	const int32 MaxPowerLevel = 4;
+	
+	PowerLevel = FMath::Clamp(NrOfBots, 0, MaxPowerLevel);
+	if (MatInst == nullptr) {
+		MatInst = MeshComp->CreateAndSetMaterialInstanceDynamicFromMaterial(0, MeshComp->GetMaterial(0));
+	}
+	if (MatInst) {
+		// Convert to a float between 0 and 1 just like an 'Alpha' value of a texture. Now the material can be set up without having to know the max power level 
+		// which can be tweaked many times by gameplay decisions (would mean we need to keep 2 places up to date)
+		float Alpha = PowerLevel / (float)MaxPowerLevel;
+		MatInst->SetScalarParameterValue("PowerLevelAlpha", Alpha);
+	}
 }
 

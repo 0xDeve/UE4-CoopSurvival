@@ -11,6 +11,7 @@ class USHealthComponent;
 class UParticleSystem;
 class UStaticMeshComponent;
 class URadialForceComponent;
+class USoundCue;
 UCLASS()
 class COOPGAME_API AExplosiveBarrel : public AActor
 {
@@ -44,6 +45,9 @@ protected:
 		void OnRep_Exploded();
 	UPROPERTY(EditDefaultsOnly, Category = "FX")
 		UMaterialInterface* ExplodedMaterial;
+
+	UPROPERTY(EditDefaultsOnly, Category = "FX")
+	USoundCue* ExplosionSound;
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
