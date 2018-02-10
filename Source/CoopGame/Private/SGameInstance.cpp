@@ -2,7 +2,7 @@
 
 #include "SGameInstance.h"
 #include "Weapons/SBaseWeapon.h"
-
+#include "SPlayerController.h"
 
 
 void USGameInstance::AddSelectedWeapons(TSubclassOf<ASBaseWeapon> SelectedWeapon, int32 PlayerID)

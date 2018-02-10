@@ -6,6 +6,8 @@
 #include "GameFramework/PlayerState.h"
 #include "SPlayerState.generated.h"
 
+class ASBaseWeapon;
+
 /**
  * 
  */
@@ -17,8 +19,11 @@ class COOPGAME_API ASPlayerState : public APlayerState
 protected:
 	UFUNCTION(BlueprintCallable, Category="PlayerState")
 	void AddScore(float ScoreDelta);
-public:
 
+public:
+	virtual void CopyProperties(APlayerState* PlayerState) override;
+	UPROPERTY(Transient, Replicated, BlueprintReadWrite, Category = "PlayerWeapon")
+		TSubclassOf<ASBaseWeapon> WeaponSelected;
 private:
 	
 	

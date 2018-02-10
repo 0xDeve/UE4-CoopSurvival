@@ -12,6 +12,9 @@
 #include "Net/UnrealNetwork.h"
 #include "Weapons/SBaseWeapon.h"
 #include "SGameInstance.h"
+#include "SPlayerState.h"
+#include "SGameState.h"
+
 // Sets default values
 ASCharacter::ASCharacter()
 {
@@ -33,12 +36,15 @@ ASCharacter::ASCharacter()
 void ASCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	USGameInstance* GI = Cast<USGameInstance>(GetWorld()->GetGameInstance());
-	MainWeaponClass = GI->SelectedWeapons.FindOrAdd(0);
 	GetMovementComponent()->GetNavAgentPropertiesRef().bCanCrouch = true;
 	DefaultFOV = ThirdPersonCamera->FieldOfView;
+
 	if (Role == ROLE_Authority) {
 		// Spawn the weapon
+		ASPlayerState* MyPlayerState = Cast<ASPlayerState>(this->PlayerState);
+		if (MyPlayerState) {
+			MainWeaponClass = MyPlayerState->WeaponSelected;
+		}
 		FActorSpawnParameters SpawnParams;
 		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 		CurrentWeapon = GetWorld()->SpawnActor<ASBaseWeapon>(MainWeaponClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
@@ -182,6 +188,7 @@ void ASCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifet
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
+	DOREPLIFETIME(ASCharacter, MainWeaponClass);
 	DOREPLIFETIME(ASCharacter, CurrentWeapon);
 	DOREPLIFETIME(ASCharacter, bDied);
 }

@@ -12,6 +12,7 @@ class ASBaseWeapon;
 class UCameraShake;
 class USHealthComponent;
 class USGameInstance;
+class ASGameState;
 
 UCLASS()
 class COOPGAME_API ASCharacter : public ACharacter
@@ -53,7 +54,7 @@ protected:
 	void BeginZoom();
 	void EndZoom();
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Weapon")
+	UPROPERTY(Replicated, BlueprintReadWrite, Category="Weapon")
 	TSubclassOf<ASBaseWeapon> MainWeaponClass;
 	
 	UPROPERTY(Replicated, BlueprintReadOnly)

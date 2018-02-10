@@ -8,6 +8,7 @@
 
 
 class ASBaseWeapon;
+class ASPlayerController;
 /**
  * 
  */
@@ -19,7 +20,10 @@ class COOPGAME_API USGameInstance : public UGameInstance
 public:
 	/*UPROPERTY(VisibleDefaultsOnly,BlueprintReadWrite, Category="Weapon")
 	TArray<TSubclassOf<ASBaseWeapon>> SelectedWeapons;*/
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category="Weapon")
 	TMap<int32, TSubclassOf<ASBaseWeapon>> SelectedWeapons;
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Weapon")
+		TArray<ASPlayerController*> ConnectedPlayers;
 protected:	
 	
 	UFUNCTION(BlueprintCallable, Category = "Weapon")

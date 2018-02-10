@@ -19,6 +19,9 @@ enum class EWaveState : uint8 {
 /**
  * 
  */
+
+class ASBaseWeapon;
+
 UCLASS()
 class COOPGAME_API ASGameState : public AGameStateBase
 {
@@ -34,7 +37,10 @@ protected:
 public:
 
 	void SetWaveState(EWaveState NewState);
-	
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
+		TMap<int32, TSubclassOf<ASBaseWeapon>> SelectedWeapons;
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+		void AddSelectedWeapons(TSubclassOf<ASBaseWeapon> SelectedWeapon, int32 PlayerID);
 	UPROPERTY(Replicated, BlueprintReadOnly, Category = "GameState")
 		int32 WaveCount;
 	

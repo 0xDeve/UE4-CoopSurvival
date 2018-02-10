@@ -2,6 +2,7 @@
 
 #include "SGameState.h"
 #include "Net/UnrealNetwork.h"
+#include "Weapons/SBaseWeapon.h"
 
 void ASGameState::OnRep_WaveState(EWaveState OldState)
 {
@@ -16,6 +17,11 @@ void ASGameState::SetWaveState(EWaveState NewState)
 		// Call on server
 		OnRep_WaveState(OldState);
 	}
+}
+
+void ASGameState::AddSelectedWeapons(TSubclassOf<ASBaseWeapon> SelectedWeapon, int32 PlayerID)
+{
+	SelectedWeapons.Add(PlayerID, SelectedWeapon);
 }
 
 void ASGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
